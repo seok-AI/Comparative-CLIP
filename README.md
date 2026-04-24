@@ -1,61 +1,44 @@
-# Comparative-CLIP — [WACV 2025]
+# How to reproduce the results
 
-**Enhancing Visual Classification using Comparative Descriptors**
-H. Lee, G. Seo, **W. Choi**, G. Jung, K. Song, J. Jung
-*IEEE/CVF Winter Conference on Applications of Computer Vision (WACV), 2025*
+## Steps to Reproduce
+1. Download and set up precomputed image features:
+   - Download the features from [here](https://huggingface.co/hk1ee/Comparative-CLIP/tree/main)
+   - Place the downloaded `precomputed_image_features` directory in the root directory of this project
 
-> 📌 **About this fork.** This repository is the co-maintained mirror of the official code.
-> Upstream: [`hankyeol/Comparative-CLIP`](https://github.com/hankyeol/Comparative-CLIP).
-> Both repositories are canonical; issues and PRs are welcome on either.
+2. Configure dataset paths:
+   - Set the `COMPARATIVE_CLIP_DATA_DIR` environment variable to the directory where your datasets (e.g., ImageNet, CUB, etc.) are located.
+   - Example: `export COMPARATIVE_CLIP_DATA_DIR=/path/to/your/datasets`
+   - By default, the code looks in `/mnt/datasets/comparative-clip`.
 
----
+3. Run experiment scripts:
+   ```bash
+   cd scripts/experiments
+   # Reproduce Table 2
+   ./Experiment-ours.sh
+   ./Experiment-baselines.sh
+   # Reproduce Table 3
+   ./Experiment-using_only_descriptor.sh
+   # Reproduce Table 4
+   ./Experiment-equal_number.sh
+   # Reproduce Table 6
+   ./Experiment-filter_existing_method.sh
+   ```
 
-## ✨ TL;DR
+- The results will be saved as `.csv` files in the `results` directory.
 
-We generate **structured comparative descriptors** with an LLM, then use them to steer CLIP's zero-shot classification behavior in a measurable, reproducible way. The paper is, in effect, a prompt-engineering study validated on vision-language benchmarks.
+# Baselines
+Our code is built upon the following repositories:
+- **DCLIP**: *Visual Classification via Description from Large Language Models* (ICLR 2023)  
+  [Paper](https://openreview.net/references/pdf?id=MKWeXr89SU) | [GitHub](https://github.com/sachit-menon/classify_by_description_release)
+- **WaffleCLIP**: *Waffling around for Performance: Visual Classification with Random Words and Broad Concepts* (ICCV 2023)  
+  [Paper](https://arxiv.org/pdf/2306.07282.pdf) | [GitHub](https://github.com/ExplainableML/WaffleCLIP?tab=readme-ov-file)
 
-## 🧑‍🔬 My contribution
+# Results
 
-- Descriptor-generation pipeline over LLM APIs — prompt schema design, structured (JSON) output parsing, retry / rate-limit handling, prompt versioning.
-- Large-scale CLIP inference benchmarking — {N} descriptor variants × {M} datasets, logged in W&B.
-- Ablations on {specific axis you owned, e.g., descriptor granularity / comparison pair sampling}.
-
-## 🧪 Reproduce
-
-```bash
-git clone https://github.com/seok-AI/Comparative-CLIP.git
-cd Comparative-CLIP
-conda env create -f environment.yml && conda activate ccclip
-# 1. Generate descriptors (requires OPENAI_API_KEY)
-python scripts/generate_descriptors.py --config configs/imagenet.yaml
-# 2. Evaluate on benchmarks
-python scripts/eval_clip.py --descriptors outputs/imagenet.json
-```
-
-## 📈 Results
-
-{Copy the main table from the paper — dataset × method × metric.}
-
-## 📂 Layout
-
-```
-configs/      # per-dataset YAML
-prompts/      # versioned descriptor-generation prompts
-src/          # descriptor gen, CLIP eval, metrics
-scripts/      # entry points
-```
-
-## 📝 Citation
-
-```bibtex
-@inproceedings{lee2025comparative,
-  title     = {Enhancing Visual Classification using Comparative Descriptors},
-  author    = {Lee, Hankyeol and Seo, Gwanghyun and Choi, Wonseok and Jung, Gwangho and Song, Kyungwoo and Jung, Jiyoung},
-  booktitle = {IEEE/CVF Winter Conference on Applications of Computer Vision (WACV)},
-  year      = {2025}
-}
-```
-
-## 📜 License
-
-Follows the upstream repository's license.
+|     ViT-B/32     |  IN1k | IN1k-V2 | Caltech | CIFAR |  CUB  |  SAT  | Places |  Food |  Pets |  DTD  | Flowers | Aircraft |  Cars |  Avg  |
+|:----------------:|:-----:|:-------:|:-------:|:-----:|:-----:|:-----:|:------:|:-----:|:-----:|:-----:|:-------:|:--------:|:-----:|:-----:|
+| CLIP             | 62.04 |  54.67  |  78.39  | 64.31 | 51.36 | 40.89 |  39.11 | 82.57 | 85.04 | 43.19 |  62.97  |   24.96  | 58.62 | 57.55 |
+| DCLIP            | 63.66 |  56.28  |  81.23  | 64.94 | 53.61 | 41.37 |  41.64 | 83.06 | 85.25 | 44.26 |  66.63  |   26.67  | 59.08 | 59.05 |
+| WaffleCLIP       | 63.32 |  55.97  |  81.06  | 65.44 | 52.47 | 43.66 |  40.67 | 82.84 | 85.48 | 42.93 |  66.32  |   25.70  | 58.82 | 58.82 |
+| Ours             | 64.02 |  56.71  |  82.24  | 65.69 | 54.09 | 42.92 |  42.22 | 83.81 | 87.41 | 46.54 |  67.07  |   27.57  | 59.30 | 59.97 |
+| Ours + Filtering | 65.66 |  57.56  |  83.55  | 64.81 | 56.41 | 51.08 |  44.18 | 84.62 | 87.04 | 53.78 |  73.43  |   28.61  | 60.15 | 62.37 |
